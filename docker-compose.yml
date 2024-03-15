@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@database:5432/todoproject
+      - JWT_SECRET=iSgewUPVAEi4qF3OPVRnY2Dpta4lA9KrRx677oGDkW9xLOJVxFaWmNRuSUI582X4r8a8+RRHfRRT65wCfJ4XqQ== 
+    ports:
+      - "4000:4000"
+    depends_on:
+      database: 
+        condition: service_healthy
+    command: >
+      sh -c "npm run migrate && npm start" 
+
+
+  database:
+    image: postgres:latest
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: todoproject
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"] # Deve aguardar o banco ficar operacional
+      timeout: 10s
+      retries: 5
+    cap_add:
+      - SYS_NICE
+    
+
+
